@@ -19,6 +19,8 @@ var url = require("url");
 var phantom = require('node-phantom');
 //https://github.com/alexscheelmeyer/node-phantom
 
+var fs = require("fs");
+
 var timegate_host = "mementoproxy.lanl.gov";
 var timegate_path = "/aggr/timegate/";
 //var timemap;
@@ -32,13 +34,23 @@ function start(){
 	function respond(request, response) {
 	  var pathname = url.parse(request.url).pathname;
 
-	  response.writeHead(200, {"Content-Type": "text/plain"});
+	  response.writeHead(200, {"Content-Type": "text/html"});
 	  var query = url.parse(request.url, true).query;
 	  var uri_r = query['URI-R'];
 	  getTimemap(uri_r,request.headers['accept-datetime']);
-	  getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true);
+	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true);
 	  
-	  response.end();
+	  if(!mementoDatetime){
+	  	console.log("Serving an HTML form");
+	  	
+	  	var buffer = fs.readFileSync('./index.html');
+		response.write(buffer.toString("utf8", 0, buffer.length));
+	
+	  	response.end();
+	  }else {
+	  	  console.log("Memento-Datetime was served. Done.");
+		  response.end();
+		}
 	}
 	
 	http.createServer(respond).listen(15421);
@@ -69,13 +81,12 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 			console.log("Memento-Datetime is "+res_gmdt.headers['memento-datetime']);
 			return res_gmdt.headers['memento-datetime'];
 		}
-		//console.log(res_gmdt.headers);
 	  });
 	  
-	req_gmdt.on('error', function(e) { // Houston...
-	  console.log('problem with request: ' + e.message);
-	  console.log(e);
-	  console.log(req_gmdt);
+	req_gmdt.on('error', function(e) { // Houston, do we have an Internet connection?
+	  console.log('problem with request: ' + e.message); 
+	  //console.log(e);
+	  //console.log(req_gmdt);
 	});
 	req_gmdt.on('socket', function (socket) { // slow connection is slow
 		socket.setTimeout(7000);  

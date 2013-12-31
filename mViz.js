@@ -23,6 +23,8 @@ var fs = require("fs");
 
 var timegate_host = "mementoproxy.lanl.gov";
 var timegate_path = "/aggr/timegate/";
+
+var PORT = 15421;
 //var timemap;
 
 
@@ -30,7 +32,15 @@ var timegate_path = "/aggr/timegate/";
 //curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" localhost:15421/?URI-R=http://matkelly.com
 //curl -I -H "Accept-Datetime: Thu, 01 Apr 2010 00:00:00 GMT" http://mementoproxy.lanl.gov/aggr/timegate/http://matkelly.com
 
-function start(){
+/**
+* Initially called to invoke the server instance
+*/
+function main(){
+	/**
+	* Handle an HTTP request and respond appropriately
+	* @param request  The request object from the client representing query information
+	* @param response Currently active HTTP response to the client used to return information to the client based on the request
+	*/
 	function respond(request, response) {
 	  var pathname = url.parse(request.url).pathname;
 
@@ -53,9 +63,15 @@ function start(){
 		}
 	}
 	
-	http.createServer(respond).listen(15421);
+	// Initialize the server based and perform the "respond" call back when a client attempts to interact with the script
+	http.createServer(respond).listen(PORT);
 }
 
+/**
+* Based on a URI and an accept-datetime, return the closest Memento-Datetime
+* @param request  The request object from the client representing query information
+* @param response Currently active HTTP response to the client used to return information to the client based on the request
+*/
 function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 	
 	var pathToFetch = path;
@@ -143,5 +159,5 @@ function getTimemap(uri,date){
 	req.end();
 }
 
-exports.start = start;
-start();
+exports.main = main;
+main();

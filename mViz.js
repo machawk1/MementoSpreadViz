@@ -69,8 +69,11 @@ function main(){
 
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
-* @param request  The request object from the client representing query information
-* @param response Currently active HTTP response to the client used to return information to the client based on the request
+* @param uri  The URI-R to use as the basis of the request to the archive
+* @param date The Accept-Datetime HTTP header value sent to the server in the memento request
+* @param host The Memento Aggregator/proxy hostname
+* @param path The Memento Aggregator/proxy path preceding the URI being requested
+* @param appendURItoFetch A boolean value to allow the method to be called recursively in case of a forward to prevent multiply appending the URI-R on subsequent recursive calls
 */
 function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 	
@@ -118,6 +121,11 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 	req_gmdt.end();
 }
 
+/**
+* TODO document function
+* @param param1
+*/
+
 function getTimemap(uri,date){
   	var options = {
 	  		host: 'mementoproxy.lanl.gov',
@@ -127,7 +135,7 @@ function getTimemap(uri,date){
 	  	 	headers: {"Accept-Datetime": date}
 	  };
 	  
-	var buffer = ""; // An out-of-scope string to save the Timemap string
+	var buffer = ""; // An out-of-scope string to save the Timemap string, TODO: better documentation
 	var req = http.request(options, function(res) {
 		res.setEncoding('utf8');
 		res.on('data', function (data) {

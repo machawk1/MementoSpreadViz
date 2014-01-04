@@ -3,7 +3,6 @@
 *  The server-side implementation of our in-progress memento visualization
 *  Mat Kelly <mkelly@cs.odu.edu> 
 * 
-*  20131220 - MAT Init
 ******************************* */
 /* Run this with:
 *  > node mViz.js
@@ -26,8 +25,6 @@ var timegate_path = "/aggr/timegate/";
 
 var PORT = 15421;
 //var timemap;
-
-
 
 //curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" localhost:15421/?URI-R=http://matkelly.com
 //curl -I -H "Accept-Datetime: Thu, 01 Apr 2010 00:00:00 GMT" http://mementoproxy.lanl.gov/aggr/timegate/http://matkelly.com
@@ -115,9 +112,6 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 		});
 	});
 
-	// write data to request body
-	req_gmdt.write('data\n');
-	req_gmdt.write('data\n');
 	req_gmdt.end();
 }
 
@@ -160,10 +154,6 @@ function getTimemap(uri,date){
 		});
 	});
 	
-
-	// write data to request body
-	req.write('data\n');
-	req.write('data\n');
 	req.end();
 }
 

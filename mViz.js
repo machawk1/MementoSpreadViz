@@ -41,28 +41,57 @@ function main(){
 	function respond(request, response) {
 	  var pathname = url.parse(request.url).pathname;
 
-	  response.writeHead(200, {"Content-Type": "text/html"});
 	  var query = url.parse(request.url, true).query;
 	  var uri_r = query['URI-R'];
 	  getTimemap(uri_r,request.headers['accept-datetime']);
-	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true);
+	  
+
+	  function echoMementoDatetimeToResponse(mementoDatetime){
+		response.write(mementoDatetime.toString("utf8", 0, mementoDatetime.length));
+	  }
+	  function closeConnection(){
+		response.end();
+	  }
+	  
+	  var callbacks = [echoMementoDatetimeToResponse,closeConnection];
+	  
+	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true,callbacks);
+	  return;
+	  /*
+	  console.log("mementoDatetime is "+mementoDatetime);
 	  
 	  if(!mementoDatetime){
+	  	return;
+	  	response.writeHead(200, {"Content-Type": "text/html"});
 	  	console.log("Serving an HTML form");
 	  	
 	  	var buffer = fs.readFileSync('./index.html');
 		response.write(buffer.toString("utf8", 0, buffer.length));
 	
-	  	response.end();
+	  	//response.end();
 	  }else {
 	  	  console.log("Memento-Datetime was served. Done.");
 		  response.end();
-		}
+		}*/
 	}
 	
 	// Initialize the server based and perform the "respond" call back when a client attempts to interact with the script
 	http.createServer(respond).listen(PORT);
 }
+
+/**
+* A data structure that allows a trace of the negotiation to be returned
+* @param statusCode The HTTP status code of the response
+* @param headers HTTP headers for the response, a key-value array
+*/
+function HTTPResponse(statusCode,headers){
+	this.statusCode = statusCode;
+	this.headers = headers;
+	this.addHeader = function(key,value){
+		this.headers[key].push(value);
+	};
+}
+
 
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
@@ -71,14 +100,15 @@ function main(){
 * @param host The Memento Aggregator/proxy hostname
 * @param path The Memento Aggregator/proxy path preceding the URI being requested
 * @param appendURItoFetch A boolean value to allow the method to be called recursively in case of a forward to prevent multiply appending the URI-R on subsequent recursive calls
+* @param callbacks An ordered set of functions to be called to ensure synchronicity of response
 */
-function getMementoDateTime(uri,date,host,path,appendURItoFetch){
+function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks,callbacksParameters){
 	
 	var pathToFetch = path;
 	if(appendURItoFetch){
 		pathToFetch += uri;
 	}
-	console.log("Trying for "+host+pathToFetch);
+	console.log("Getting Memento-Datetime for:\r\n\tURI-R: "+host+pathToFetch+"\r\n\tAccept-Datetime: "+date);
 	
  	var options_gmdt = {
 	  		host: host,
@@ -88,21 +118,29 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch){
 	  	 	headers: {"Accept-Datetime": date}
 	  };
 	var locationHeader = "";  
+
 	var req_gmdt = http.request(options_gmdt, function(res_gmdt) {
 		if(res_gmdt.headers['location'] && res_gmdt.statusCode != 200){
 			console.log("Received a "+res_gmdt.statusCode+" code, going to "+res_gmdt.headers['location']);
 			var locationUrl = url.parse(res_gmdt.headers['location']);
-			return getMementoDateTime(uri,date,locationUrl.host,locationUrl.pathname,false);
+			return getMementoDateTime(uri,date,locationUrl.host,locationUrl.pathname,false,callbacks);
 		}else {
 			console.log("Memento-Datetime is "+res_gmdt.headers['memento-datetime']);
+			for(var cb=0; cb<callbacks.length; cb++){	//execute the callbacks in-order
+				var callback = callbacks[cb];
+				if(callback.name.indexOf("MementoDatetime") > -1){
+					callback(res_gmdt.headers['memento-datetime']);
+				}else {
+					callback();
+				}
+			}
+			
 			return res_gmdt.headers['memento-datetime'];
 		}
-	  });
-	  
+	});
+
 	req_gmdt.on('error', function(e) { // Houston, do we have an Internet connection?
 	  console.log('problem with request: ' + e.message); 
-	  //console.log(e);
-	  //console.log(req_gmdt);
 	});
 	req_gmdt.on('socket', function (socket) { // slow connection is slow
 		socket.setTimeout(7000);  

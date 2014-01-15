@@ -69,8 +69,7 @@ function main(){
 	  if(!uri_r.match(/^[a-zA-Z]+:\/\//)){uri_r = 'http://' + uri_r;}//prepend scheme if necessary
 	  
 	  if(!validator.isURL(uri_r)){ //return "invalid URL"
-	  	response.write("{\"Error\": \"Invalid URL\"}");
-	  	response.end();
+	  	returnJSONError(response,"Invalid URI");
 	  	return;
 	  }else {
 	  	console.log("isaurl? "+validator.isURL(uri_r));
@@ -86,7 +85,13 @@ function main(){
 		response.end();
 	  }
 	  
-	  var callbacks = [echoMementoDatetimeToResponse,closeConnection];
+	  function returnJSONError(str){
+		 response.write("{\"Error\": \""+str+"\"}");
+		 response.end();
+	  }
+	  
+	  
+	  var callbacks = [echoMementoDatetimeToResponse,closeConnection,returnJSONError];
 	  //console.log(request.headers);
 	  										  //uri, date,                              host,         path,         appendURItoFetch,callbacks
 	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true,callbacks);
@@ -135,6 +140,11 @@ function HTTPRequest(method,uri,headers){
 	this.headers = headers;
 }
 
+function returnJSONError(response,str){
+	 response.write("{\"Error\": \""+str+"\"}");
+	 response.end();
+}
+
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
 * @param uri  The URI-R to use as the basis of the request to the archive
@@ -173,7 +183,16 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 			console.log("Received a "+res_gmdt.statusCode+" code, going to "+res_gmdt.headers['location']);
 			var locationUrl = url.parse(res_gmdt.headers['location']);
 			return getMementoDateTime(uri,date,locationUrl.host,locationUrl.pathname,false,callbacks);
+		}else if(!(res_gmdt.headers['memento-datetime'])){ //bad URI, e.g., example.comx
+			var jsonErrorCallback = callbacks[callbacks.length - 1];
+			if(jsonErrorCallback.name == "returnJSONError"){
+				jsonErrorCallback("The URI-R you requested has no mementos.");
+			}else {
+				console.log("We should have access to the error callback here but did not. Something's not right");
+			}
+			return;
 		}else {
+			
 			console.log("Memento-Datetime is "+res_gmdt.headers['memento-datetime']);
 			for(var cb=0; cb<callbacks.length; cb++){	//execute the callbacks in-order
 				var callback = callbacks[cb];

@@ -26,8 +26,8 @@ jQuery(document).ready(function($){
 	//file:// cannot be used, use local apache
 	$("#submitButton").click(function(){
 		if($("#uri_r").val().length <= 0){
-			$("#result").html("You forgot a URI-R!");
-			$("#result").addClass("error");
+			$("#message").html("You forgot a URI-R!");
+			$("#message").addClass("error");
 			return false;
 		}
 		$.ajax({
@@ -37,11 +37,13 @@ jQuery(document).ready(function($){
 		}).done(function(data){
 			var mementoDatetimeObj = jQuery.parseJSON(data);
 			if(mementoDatetimeObj["Memento-Datetime"]){
-				$("#result").html(mementoDatetimeObj["Memento-Datetime"]);
-				$("#result").removeClass("error");
+				$("#result").val(mementoDatetimeObj["Memento-Datetime"]);
+				$("#message").removeClass("error");
+				$("#message").html("");
 			}else if(mementoDatetimeObj["Error"]){
-				$("#result").html(mementoDatetimeObj["Error"]);
-				$("#result").addClass("error");
+				$("#result").val("");
+				$("#message").html(mementoDatetimeObj["Error"]);
+				$("#message").addClass("error");
 			}
 		});
 		//console.log($("#date").val());//need Mon, 17 Jul 2006 05:55:01 GMT
@@ -56,6 +58,7 @@ jQuery(document).ready(function($){
 body {margin: 1.0em;}
 label {display: block; float: left; width: 150px;}
 .error {color: red; font-weight: bold;}
+#datetimepicker {display: none;}
 </style>
 </head>
 <body>
@@ -63,14 +66,14 @@ label {display: block; float: left; width: 150px;}
  <label for="uri_r">URI-R:</label><input class="span2" size="16" type="text" id="uri_r"  />
 
 <div id="datetimepicker" class="input-append date">
-	<label for="date">Accept-Datetime:</label>
-      <input type="text"></input>
+	<label for="dateX">Accept-Datetime:</label>
+      <input type="text" id="bootstrapDate"></input>
       <span class="add-on">
         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
       </span>
-    </div>
-    <input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><span id="result"></span><br /><br />
-
+    </div><br style="clear: both;" />
+    <label for="date">Accept-Datetime:</label><input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><span id="message"></span><br />
+	<label for="date">Memento-Datetime:</label><input type="text" id="result" readonly /><br />
 <input type="submit" id="submitButton" />
 
 <form>

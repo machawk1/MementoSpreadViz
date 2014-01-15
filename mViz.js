@@ -21,6 +21,7 @@ var phantom = require('node-phantom');
 //https://github.com/alexscheelmeyer/node-phantom
 
 var fs = require("fs");
+var validator = require('validator');
 
 var timegate_host = "mementoproxy.lanl.gov";
 var timegate_path = "/aggr/timegate/";
@@ -58,10 +59,23 @@ function main(){
 		  response.end();
 		  return;  
 	 }
+	 
+	 
+	 
 	  var pathname = url.parse(request.url).pathname;
 		console.log(request.headers);
 	  var query = url.parse(request.url, true).query;
 	  var uri_r = query['URI-R'];
+	  if(!uri_r.match(/^[a-zA-Z]+:\/\//)){uri_r = 'http://' + uri_r;}//prepend scheme if necessary
+	  
+	  if(!validator.isURL(uri_r)){ //return "invalid URL"
+	  	response.write("{\"Error\": \"Invalid URL\"}");
+	  	response.end();
+	  	return;
+	  }else {
+	  	console.log("isaurl? "+validator.isURL(uri_r));
+	  }
+	  
 	  getTimemap(uri_r,request.headers['accept-datetime']);
 	  
 

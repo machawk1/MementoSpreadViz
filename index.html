@@ -45,6 +45,9 @@ jQuery(document).ready(function($){
 				$("#message").html(mementoDatetimeObj["Error"]);
 				$("#message").addClass("error");
 			}
+		}).fail(function(data){
+			$("#message").html("Something's wrong with the server. Is the node server running?");
+			$("#message").addClass("error");
 		});
 		//console.log($("#date").val());//need Mon, 17 Jul 2006 05:55:01 GMT
 		//console.log("Mon, 17 Jul 2006 05:55:01 GMT");

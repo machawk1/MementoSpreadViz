@@ -73,16 +73,17 @@ function main(){
 	  	return;
 	  }else {
 	  	console.log("isaurl? "+validator.isURL(uri_r));
-	  }
-	  
-	  getTimemap(uri_r,request.headers['accept-datetime']);
-	  
+	  } 
 
 	  function echoMementoDatetimeToResponse(mementoDatetime){
-		response.write("{\"Memento-Datetime\": \""+mementoDatetime.toString("utf8", 0, mementoDatetime.length)+"\"}");
+		response.write("{\"Memento-Datetime\": \""+mementoDatetime.toString("utf8", 0, mementoDatetime.length)+"\",");
 	  }
 	  function closeConnection(){
 		response.end();
+	  }
+	  
+	  function getTimemapCallback(uri,callback){
+	  	getTimemap(response,uri,callback);
 	  }
 	  
 	  function returnJSONError(str){
@@ -91,7 +92,7 @@ function main(){
 	  }
 	  
 	  
-	  var callbacks = [echoMementoDatetimeToResponse,closeConnection,returnJSONError];
+	  var callbacks = [echoMementoDatetimeToResponse,getTimemapCallback,closeConnection,returnJSONError];
 	  //console.log(request.headers);
 	  										  //uri, date,                              host,         path,         appendURItoFetch,callbacks
 	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true,callbacks);
@@ -191,14 +192,18 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 			console.log("Memento-Datetime is "+res_gmdt.headers['memento-datetime']);
 			for(var cb=0; cb<callbacks.length; cb++){	//execute the callbacks in-order
 				var callback = callbacks[cb];
-				if(callback.name.indexOf("MementoDatetime") > -1){
+				if(callback.name.indexOf("echoMementoDatetimeToResponse") > -1){
 					callback(res_gmdt.headers['memento-datetime']);
 				}else if(callback.name.indexOf("closeConnection") > -1){
-					callback();
-					console.log("Echoing trace");
-					console.log(trace);
-				}else if(jsonErrorCallback.name == "returnJSONError"){
-					console.log("returnJSONError() available but not needed in this context though critical to be on the tail-end of the callback list.");
+					//console.log("Closing connection");
+					//callback();
+					//console.log("Echoing trace");
+					//console.log(trace);
+				}else if(callback.name == "returnJSONError"){
+					//returnJSONError() available but not needed in this context though critical to be on the tail-end of the callback list.
+				}else if(callback.name == "getTimemapCallback"){
+					var uri = options_gmdt.path.substr(options_gmdt.path.indexOf("http://"));
+					callback(uri,callbacks[2]); //to overcome a race condition, pass the closeConnection callback to the last operation that is to write back to the client					
 				}else {
 					console.log("Unknown callback: "+callback.name);
 				}
@@ -223,17 +228,16 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 }
 
 /**
-* TODO document function
-* @param param1
+* Given a URI and a datetime, return a timemap
+* @param uri The URI-R in-question
 */
 
-function getTimemap(uri,date){
+function getTimemap(response,uri,callback){
   	var options = {
 	  		host: 'mementoproxy.lanl.gov',
 	  		path: '/aggr/timemap/link/1/' + uri,
 	  		port: 80,
-	  		method: 'GET',
-	  	 	headers: {"Accept-Datetime": date}
+	  		method: 'GET'
 	  };
 	  
 	var buffer = ""; // An out-of-scope string to save the Timemap string, TODO: better documentation
@@ -245,6 +249,10 @@ function getTimemap(uri,date){
 		res.on('end',function(d){
 			if(buffer.length > 100){ 
 				console.log("Timemap acquired for "+uri);
+				response.write("\"TimeMap\": \""+buffer.replace(/\\/g,"\\\"").toString("utf8", 0, buffer.length)+"\"}");
+				//res.end();
+
+				callback();
 			}
 		});
 	  });

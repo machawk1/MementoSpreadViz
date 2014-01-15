@@ -69,7 +69,7 @@ function main(){
 	  if(!uri_r.match(/^[a-zA-Z]+:\/\//)){uri_r = 'http://' + uri_r;}//prepend scheme if necessary
 	  
 	  if(!validator.isURL(uri_r)){ //return "invalid URL"
-	  	returnJSONError(response,"Invalid URI");
+	  	returnJSONError("Invalid URI");
 	  	return;
 	  }else {
 	  	console.log("isaurl? "+validator.isURL(uri_r));
@@ -140,11 +140,6 @@ function HTTPRequest(method,uri,headers){
 	this.headers = headers;
 }
 
-function returnJSONError(response,str){
-	 response.write("{\"Error\": \""+str+"\"}");
-	 response.end();
-}
-
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
 * @param uri  The URI-R to use as the basis of the request to the archive
@@ -202,6 +197,8 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 					callback();
 					console.log("Echoing trace");
 					console.log(trace);
+				}else if(jsonErrorCallback.name == "returnJSONError"){
+					console.log("returnJSONError() available but not needed in this context though critical to be on the tail-end of the callback list.");
 				}else {
 					console.log("Unknown callback: "+callback.name);
 				}

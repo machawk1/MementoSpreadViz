@@ -43,22 +43,21 @@ function main(){
 	* @param response Currently active HTTP response to the client used to return information to the client based on the request
 	*/
 	function respond(request, response) {
-	 console.log(request.method);
+	 //from https://gist.github.com/nilcolor/816580
+	 var headers = {};
+	 // IE8 does not allow domains to be specified, just the *
+	 // headers["Access-Control-Allow-Origin"] = req.headers.origin;
+	 headers["Access-Control-Allow-Origin"] = "*";
+	 headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
+	 headers["Access-Control-Allow-Credentials"] = false;
+	 headers["Access-Control-Max-Age"] = '86400'; // 24 hours
+	 headers["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Accept-Datetime";
+	 response.writeHead(200, headers);
+	 
 	 if (request.method === 'OPTIONS') {
-		  
-		  var headers = {};
-		  // IE8 does not allow domains to be specified, just the *
-		  // headers["Access-Control-Allow-Origin"] = req.headers.origin;
-		  headers["Access-Control-Allow-Origin"] = "*";
-		  headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
-		  headers["Access-Control-Allow-Credentials"] = false;
-		  headers["Access-Control-Max-Age"] = '86400'; // 24 hours
-		  headers["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Accept-Datetime";
-		  response.writeHead(200, headers);
 		  response.end();
-		  return;
-		  
-	}
+		  return;  
+	 }
 	  var pathname = url.parse(request.url).pathname;
 		console.log(request.headers);
 	  var query = url.parse(request.url, true).query;
@@ -67,7 +66,7 @@ function main(){
 	  
 
 	  function echoMementoDatetimeToResponse(mementoDatetime){
-		response.write("{Memento-Datetime: \""+mementoDatetime.toString("utf8", 0, mementoDatetime.length)+"\"}");
+		response.write("{\"Memento-Datetime\": \""+mementoDatetime.toString("utf8", 0, mementoDatetime.length)+"\"}");
 	  }
 	  function closeConnection(){
 		response.end();

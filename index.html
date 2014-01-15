@@ -25,12 +25,24 @@ jQuery(document).ready(function($){
 	//$("#date").attr("value",(new Date()).today());
 	//file:// cannot be used, use local apache
 	$("#submitButton").click(function(){
+		if($("#uri_r").val().length <= 0){
+			$("#result").html("You forgot a URI-R!");
+			$("#result").addClass("error");
+			return false;
+		}
 		$.ajax({
 			url: "http://localhost:15421",
-			data: "URI-R=http://matkelly.com",
+			data: "URI-R="+$("#uri_r").val(),
 			headers: {"accept-datetime" : $("#date").val()}
 		}).done(function(data){
-			console.log(data);
+			var mementoDatetimeObj = jQuery.parseJSON(data);
+			if(mementoDatetimeObj["Memento-Datetime"]){
+				$("#result").html(mementoDatetimeObj["Memento-Datetime"]);
+				$("#result").removeClass("error");
+			}else if(mementoDatetimeObj["Error"]){
+				$("#result").html(mementoDatetimeObj["Error"]);
+				$("#result").addClass("error");
+			}
 		});
 		//console.log($("#date").val());//need Mon, 17 Jul 2006 05:55:01 GMT
 		//console.log("Mon, 17 Jul 2006 05:55:01 GMT");
@@ -43,6 +55,7 @@ jQuery(document).ready(function($){
 <style type="text/css">
 body {margin: 1.0em;}
 label {display: block; float: left; width: 150px;}
+.error {color: red; font-weight: bold;}
 </style>
 </head>
 <body>
@@ -56,7 +69,7 @@ label {display: block; float: left; width: 150px;}
         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
       </span>
     </div>
-    <input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><br /><br />
+    <input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><span id="result"></span><br /><br />
 
 <input type="submit" id="submitButton" />
 

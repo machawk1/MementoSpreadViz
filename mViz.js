@@ -141,6 +141,10 @@ function HTTPRequest(method,uri,headers){
 	this.headers = headers;
 }
 
+function TimeMap(str){
+	this.str = str;
+}
+
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
 * @param uri  The URI-R to use as the basis of the request to the archive
@@ -247,12 +251,11 @@ function getTimemap(response,uri,callback){
 			buffer += data.toString();
 		});
 		res.on('end',function(d){
-			if(buffer.length > 100){ 
+			if(buffer.length > 100){  //magic number = arbitrary
 				console.log("Timemap acquired for "+uri);
 				response.write("\"TimeMap\": \""+buffer.replace(/\\/g,"\\\"").toString("utf8", 0, buffer.length)+"\"}");
-				//res.end();
 
-				callback();
+				callback(); //call connection close
 			}
 		});
 	  });

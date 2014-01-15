@@ -18,9 +18,9 @@ TODO
 $.noConflict();
 
 jQuery(document).ready(function($){
-      $('#datetimepicker').datetimepicker({
-        format: 'dddd, dd MM yyyy HH:mm:ss Z'
-      });
+      //$('#datetimepicker').datetimepicker({
+      //  format: 'dddd, dd MM yyyy HH:mm:ss Z'
+      //});
 	//console.log((new Date()).format("mm/dd/yyyy"));
 	//$("#date").attr("value",(new Date()).today());
 	//file:// cannot be used, use local apache
@@ -36,7 +36,10 @@ jQuery(document).ready(function($){
 			headers: {"accept-datetime" : $("#date").val()}
 		}).done(function(data){
 			console.log(data);
-			var mementoDatetimeObj = jQuery.parseJSON(data);
+			$("#output").text(data);
+			var mDateTime = data.substr(0,data.indexOf("\","))+"\"}";
+
+			var mementoDatetimeObj = jQuery.parseJSON(mDateTime);
 			if(mementoDatetimeObj["Memento-Datetime"]){
 				$("#result").val(mementoDatetimeObj["Memento-Datetime"]);
 				$("#message").removeClass("error");
@@ -56,6 +59,12 @@ jQuery(document).ready(function($){
 		return false;
 	});
 	
+	// A means for defaults to be reinstated
+	$("#default").click(function(){
+		var target = "#"+$(this).attr("name");
+		$(target).val($(target).attr("alt"));
+	});
+	
 });
 </script>
 <style type="text/css">
@@ -63,11 +72,12 @@ body {margin: 1.0em;}
 label {display: block; float: left; width: 150px;}
 .error {color: red; font-weight: bold;}
 #datetimepicker {display: none;}
+textarea {width: 100%; height: 500px; display: block; clear: both;margin: 1.0em 0 0 -1.0em;}
 </style>
 </head>
 <body>
 <form method="get" action="">
- <label for="uri_r">URI-R:</label><input class="span2" size="16" type="text" id="uri_r"  />
+ <label for="uri_r">URI-R:</label><input class="span2 defaultable" size="16" type="text" id="uri_r" value="http://matkelly.com" />
 
 <div id="datetimepicker" class="input-append date">
 	<label for="dateX">Accept-Datetime:</label>
@@ -76,9 +86,11 @@ label {display: block; float: left; width: 150px;}
         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
       </span>
     </div><br style="clear: both;" />
-    <label for="date">Accept-Datetime:</label><input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><span id="message"></span><br />
+    <label for="date">Accept-Datetime:</label><input type="text" id="date" class="defaultable" value="Mon, 17 Jul 2006 05:55:01 GMT" alt="Mon, 17 Jul 2006 05:55:01 GMT" /><span id="message"></span><br />
 	<label for="date">Memento-Datetime:</label><input type="text" id="result" readonly /><br />
 <input type="submit" id="submitButton" />
+<input type="button" id="default" name="date" value="Restore Default" />
+<textarea id="output" placeholder="Query output will be here"></textarea>
 
 <form>
 </body>

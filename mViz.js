@@ -14,6 +14,8 @@ var http = require("http");
 //var http = require('http').http;
 var url = require("url");
 
+//var util = require("util"); //for util.inspect for debugging
+
 // And now for something completely different: phantomjs dependencies!
 var phantom = require('node-phantom');
 //https://github.com/alexscheelmeyer/node-phantom
@@ -25,6 +27,8 @@ var timegate_path = "/aggr/timegate/";
 
 var PORT = 15421;
 //var timemap;
+
+var trace = []; //An array for us to follow the negotiation after-the-fact
 
 //curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" localhost:15421/?URI-R=http://matkelly.com
 //curl -I -H "Accept-Datetime: Thu, 01 Apr 2010 00:00:00 GMT" http://mementoproxy.lanl.gov/aggr/timegate/http://matkelly.com
@@ -47,14 +51,15 @@ function main(){
 	  
 
 	  function echoMementoDatetimeToResponse(mementoDatetime){
-		response.write(mementoDatetime.toString("utf8", 0, mementoDatetime.length));
+		response.write("{Memento-Datetime: \""+mementoDatetime.toString("utf8", 0, mementoDatetime.length)+"\"}");
 	  }
 	  function closeConnection(){
 		response.end();
 	  }
 	  
 	  var callbacks = [echoMementoDatetimeToResponse,closeConnection];
-	  
+	  console.log(request.headers);
+	  										  //uri, date,                              host,         path,         appendURItoFetch,callbacks
 	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true,callbacks);
 	  return;
 	  /*
@@ -81,7 +86,7 @@ function main(){
 
 /**
 * A data structure that allows a trace of the negotiation to be returned
-* @param statusCode The HTTP status code of the response
+* @param statusCode HTTP status code of the response
 * @param headers HTTP headers for the response, a key-value array
 */
 function HTTPResponse(statusCode,headers){
@@ -91,7 +96,15 @@ function HTTPResponse(statusCode,headers){
 		this.headers[key].push(value);
 	};
 }
+HTTPResponse.prototype.toJSON = function(){
+	return "foo";
+};
 
+function HTTPRequest(method,uri,headers){
+	this.method = method;
+	this.uri = uri;
+	this.headers = headers;
+}
 
 /**
 * Based on a URI and an accept-datetime, return the closest Memento-Datetime
@@ -102,7 +115,7 @@ function HTTPResponse(statusCode,headers){
 * @param appendURItoFetch A boolean value to allow the method to be called recursively in case of a forward to prevent multiply appending the URI-R on subsequent recursive calls
 * @param callbacks An ordered set of functions to be called to ensure synchronicity of response
 */
-function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks,callbacksParameters){
+function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 	
 	var pathToFetch = path;
 	if(appendURItoFetch){
@@ -118,8 +131,15 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks,callba
 	  	 	headers: {"Accept-Datetime": date}
 	  };
 	var locationHeader = "";  
-
+	
+	trace.push(new HTTPRequest(options_gmdt.method,options_gmdt.host+options_gmdt.path,options_gmdt.headers));
 	var req_gmdt = http.request(options_gmdt, function(res_gmdt) {
+		trace.push(new HTTPResponse(
+			res_gmdt.statusCode,
+			{
+			 	"Memento-Datetime": res_gmdt.headers['memento-datetime']
+			}
+		));
 		if(res_gmdt.headers['location'] && res_gmdt.statusCode != 200){
 			console.log("Received a "+res_gmdt.statusCode+" code, going to "+res_gmdt.headers['location']);
 			var locationUrl = url.parse(res_gmdt.headers['location']);
@@ -130,8 +150,12 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks,callba
 				var callback = callbacks[cb];
 				if(callback.name.indexOf("MementoDatetime") > -1){
 					callback(res_gmdt.headers['memento-datetime']);
-				}else {
+				}else if(callback.name.indexOf("closeConnection") > -1){
 					callback();
+					console.log("Echoing trace");
+					console.log(trace);
+				}else {
+					console.log("Unknown callback: "+callback.name);
 				}
 			}
 			

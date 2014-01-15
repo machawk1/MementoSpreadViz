@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <!-- 
 TODO
 * Add jquery min.map so as to not produce errors with each execution (likely a jQ 2 thing)
@@ -5,17 +6,37 @@ TODO
 -->
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
-<link rel="stylesheet" type="text/css" href="datepicker/css/datepicker.css">
+<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" media="screen"
+     href="http://tarruda.github.com/bootstrap-datetimepicker/assets/css/bootstrap-datetimepicker.min.css">
 <script src="jquery-2.0.3.min.js"></script>
-<script src="bootstrap/js/bootstrap.js"></script>
-<script src="datepicker/js/bootstrap-datepicker.js"></script>
-<script src="moment-with-langs.min.js"></script> <!--Unused but useful -->
+<script src="moment-with-langs.min.js"></script><!-- Unused but useful -->
+<script type="text/javascript"
+     src="http://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.min.js">
+    </script>
 <script>
-$(document).ready(function(){
-	$("#date").datepicker();
+$.noConflict();
+
+jQuery(document).ready(function($){
+      $('#datetimepicker').datetimepicker({
+        format: 'dddd, dd MM yyyy HH:mm:ss Z'
+      });
 	//console.log((new Date()).format("mm/dd/yyyy"));
 	//$("#date").attr("value",(new Date()).today());
+	$("#submitButton").click(function(){
+		$.ajax({
+			url: "http://localhost:15421/",
+			data: "URI-R=http://matkelly.com",
+			headers: {"accept-datetime" : $("#date").val()}
+		}).done(function(data){
+			console.log(data);
+		});
+		//console.log($("#date").val());//need Mon, 17 Jul 2006 05:55:01 GMT
+		//console.log("Mon, 17 Jul 2006 05:55:01 GMT");
+		//console.log(moment($("#date").val(),"EEE, dd MMM yyyy HH:mm:ss Z")); //Is this correct for RFC1123
+		return false;
+	});
+	
 });
 </script>
 <style type="text/css">
@@ -26,11 +47,17 @@ label {display: block; float: left; width: 150px;}
 <body>
 <form method="get" action="">
  <label for="uri_r">URI-R:</label><input class="span2" size="16" type="text" id="uri_r"  />
- <div class="input-append date" id="datepicker" data-date-format="mm/dd/yyyy">
-    <label for="date">Accept-Datetime:</label><input class="span2" size="16" type="text" data-date-format="mm/dd/yyyy" id="date" readonly="readonly" value="" />
-    <span class="add-on"><i class="icon-calendar"></i></span>
-</div>   
-<input type="submit" />
+
+<div id="datetimepicker" class="input-append date">
+	<label for="date">Accept-Datetime:</label>
+      <input type="text"></input>
+      <span class="add-on">
+        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+      </span>
+    </div>
+    <input type="text" id="date" value="Mon, 17 Jul 2006 05:55:01 GMT" /><br /><br />
+
+<input type="submit" id="submitButton" />
 
 <form>
 </body>

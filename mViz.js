@@ -43,8 +43,24 @@ function main(){
 	* @param response Currently active HTTP response to the client used to return information to the client based on the request
 	*/
 	function respond(request, response) {
+	 console.log(request.method);
+	 if (request.method === 'OPTIONS') {
+		  
+		  var headers = {};
+		  // IE8 does not allow domains to be specified, just the *
+		  // headers["Access-Control-Allow-Origin"] = req.headers.origin;
+		  headers["Access-Control-Allow-Origin"] = "*";
+		  headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
+		  headers["Access-Control-Allow-Credentials"] = false;
+		  headers["Access-Control-Max-Age"] = '86400'; // 24 hours
+		  headers["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Accept-Datetime";
+		  response.writeHead(200, headers);
+		  response.end();
+		  return;
+		  
+	}
 	  var pathname = url.parse(request.url).pathname;
-
+		console.log(request.headers);
 	  var query = url.parse(request.url, true).query;
 	  var uri_r = query['URI-R'];
 	  getTimemap(uri_r,request.headers['accept-datetime']);
@@ -58,7 +74,7 @@ function main(){
 	  }
 	  
 	  var callbacks = [echoMementoDatetimeToResponse,closeConnection];
-	  console.log(request.headers);
+	  //console.log(request.headers);
 	  										  //uri, date,                              host,         path,         appendURItoFetch,callbacks
 	  var mementoDatetime = getMementoDateTime(uri_r,request.headers['accept-datetime'],timegate_host,timegate_path,true,callbacks);
 	  return;

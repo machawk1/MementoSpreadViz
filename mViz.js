@@ -22,6 +22,7 @@ var phantom = require('node-phantom');
 
 var fs = require("fs");
 var validator = require('validator');
+var underscore = require('underscore');
 
 var timegate_host = "mementoproxy.lanl.gov";
 var timegate_path = "/aggr/timegate/";
@@ -141,8 +142,51 @@ function HTTPRequest(method,uri,headers){
 	this.headers = headers;
 }
 
+/**
+* Used to objectify a returned TimeMap text
+* @param str The raw string of the fetched TimeMap
+*/
 function TimeMap(str){
 	this.str = str;
+	this.mementos = [];
+	this.createMementos = function(){
+		var mementoEntries = this.str.split(/\s*,\s</g);
+		for(mementoEntry in mementoEntries){
+			var str = mementoEntries[mementoEntry];
+			var uri = str.substr(0,str.indexOf(">"));
+			uri = uri.replace("<",""); //remove first character of first line and any remaining
+			var relRegex = /rel=\".*?\"/gm;
+			var dtRegex = /datetime=\".*?\"/gm;
+			var rels = str.match(relRegex);
+			var dts = str.match(dtRegex);
+			var dt, rel;
+			if(rels){rel = rels[0].substring(5,rels[0].length - 1);}
+			if(dts){dt = dts[0].substring(10,dts[0].length - 1);}
+
+			var foundMemento = new Memento(uri,dt,rel);
+			this.mementos.push(foundMemento);
+			delete foundMemento;
+		}	
+	}
+}
+TimeMap.prototype.toString = function(){
+	return "["+this.mementos.join(",")+"]";
+}
+
+/**
+* An objective representation of an archived resource
+* @param uri The location of the resource
+* @param datetime The time at which the resource was archives
+* @param rel The representation of the resource in the parent timemap (this likely doesn't belong here)
+*/
+function Memento(uri,datetime,rel){
+	this.uri = uri;
+	this.datetime = datetime;
+	this.rel = rel;
+}
+
+Memento.prototype.toString = function(){
+	return JSON.stringify(this);
 }
 
 /**
@@ -253,7 +297,9 @@ function getTimemap(response,uri,callback){
 		res.on('end',function(d){
 			if(buffer.length > 100){  //magic number = arbitrary
 				console.log("Timemap acquired for "+uri);
-				response.write("\"TimeMap\": \""+buffer.replace(/\\/g,"\\\"").toString("utf8", 0, buffer.length)+"\"}");
+				var t = new TimeMap(buffer);
+				t.createMementos();
+				response.write("\"TimeMap\": "+t.toString("utf8", 0, t.mementos.length)+"}");
 
 				callback(); //call connection close
 			}

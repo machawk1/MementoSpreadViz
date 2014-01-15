@@ -170,7 +170,7 @@ function TimeMap(str){
 	}
 }
 TimeMap.prototype.toString = function(){
-	return "["+this.mementos.join(",")+"]";
+	return "{\"mementos\":["+this.mementos.join(",")+"]}";
 }
 
 /**

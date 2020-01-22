@@ -7,7 +7,7 @@
 /* Run this with:
 *  > node mViz.js
 *  Then send a request for a URI and Accept-Datetime, e.g.,
-*  > curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" localhost:15421/?URI-R=http://matkelly.com
+*  > curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" "localhost:15421/?URI-R=http://matkelly.com"
 *  The expected return value is the resolved Accept-Datetime
 */
 var http = require("http");
@@ -24,8 +24,8 @@ var fs = require("fs");
 var validator = require('validator');
 var underscore = require('underscore');
 
-var timegate_host = "mementoproxy.lanl.gov";
-var timegate_path = "/aggr/timegate/";
+var timegate_host = "memgator.cs.odu.edu";
+var timegate_path = "/timemap/link/";
 
 var PORT = 15421;
 //var timemap;
@@ -33,7 +33,7 @@ var PORT = 15421;
 var trace = []; //An array for us to follow the negotiation after-the-fact
 
 //curl -H "Accept-Datetime: Thu, 31 May 2007 20:35:00 GMT" localhost:15421/?URI-R=http://matkelly.com
-//curl -I -H "Accept-Datetime: Thu, 01 Apr 2010 00:00:00 GMT" http://mementoproxy.lanl.gov/aggr/timegate/http://matkelly.com
+//curl -I -H "Accept-Datetime: Thu, 01 Apr 2010 00:00:00 GMT" https://memgator.cs.odu.edu/timegate/link/http://matkelly.com
 
 /**
 * Initially called to invoke the server instance
@@ -296,8 +296,8 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
 
 function getTimemap(response,uri,callback){
   	var options = {
-	  		host: 'mementoproxy.lanl.gov',
-	  		path: '/aggr/timemap/link/1/' + uri,
+	  		host: 'memgator.cs.odu.edu',
+	  		path: '/timemap/link/' + uri,
 	  		port: 80,
 	  		method: 'GET'
 	  };

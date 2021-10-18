@@ -223,7 +223,7 @@ function getMementoDateTime(uri,date,host,path,appendURItoFetch,callbacks){
  	var options_gmdt = {
 	  		host: host,
 	  		path: pathToFetch,
-	  		port: 80,
+	  		port: 443,
 	  		method: 'HEAD',
 	  	 	headers: {"Accept-Datetime": date}
 	  };

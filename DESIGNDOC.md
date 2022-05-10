@@ -65,7 +65,7 @@ Content-Type: application/json
     "closest": "http://web.archive.org/web/20140125101941/http://ws-dl.cs.odu.edu/",
     "datetime": "Thu, 16 Jan 2014 13:32:34 GMT"
   },
-  "mementoes": [
+  "mementos": [
     {
       "memento": "http://web.archive.org/web/20130825163818/http://ws-dl.cs.odu.edu/",
       "datetime": "Sun, 25 Aug 2013 16:38:18 GMT"
@@ -108,7 +108,7 @@ Content-Type: application/json
     "title": "Home"
   },
   "stats": {
-    "mementoes": 321,
+    "mementos": 321,
     "assets": 5,
     "outlinks": 9,
     "size": 9546,
